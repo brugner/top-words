@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Swashbuckle.AspNetCore.Swagger;
+using System;
+using System.IO;
+using System.Reflection;
+using TopWords.Services;
+using TopWords.Services.Interfaces;
 
 namespace TopWords
 {
@@ -24,15 +24,31 @@ namespace TopWords
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<CookiePolicyOptions>(options =>
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            services.AddSwaggerGen(gen =>
             {
-                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-                options.CheckConsentNeeded = context => true;
-                options.MinimumSameSitePolicy = SameSiteMode.None;
+                gen.SwaggerDoc("v1", new Info
+                {
+                    Title = "Repeat After Me API",
+                    Version = "v1",
+                    Description = "Welcome to the backyard",
+                    Contact = new Contact
+                    {
+                        Email = "nery.brugnoni@gmail.com",
+                        Name = "Nery Brugnoni",
+                        Url = "https://linkedin.com/in/nbrugnoni/"
+                    }
+                });
+
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                gen.IncludeXmlComments(xmlPath);
             });
 
-
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddScoped<ILyricsService, LyricsService>();
+            services.AddScoped<ICrawlerService, CrawlerService>();
+            services.AddScoped<IWordFrequencyService, WordFrequencyService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -45,13 +61,17 @@ namespace TopWords
             else
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-            app.UseCookiePolicy();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "R.A.M v1");
+            });
 
             app.UseMvc(routes =>
             {
