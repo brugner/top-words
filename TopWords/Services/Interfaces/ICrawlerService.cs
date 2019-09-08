@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using TopWords.Models;
 
 namespace TopWords.Services.Interfaces
 {
     public interface ICrawlerService
     {
-        Task<List<string>> GetSongsUrls(long artistId);
+        Task<SongsPageInfo> GetSongsPageInfo(long artistId);
         Task<string> GetSongLyrics(string songUrl);
     }
 }

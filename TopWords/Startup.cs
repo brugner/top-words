@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using AspNetCoreRateLimit;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +12,7 @@ using System.Reflection;
 using TopWords.Hubs;
 using TopWords.Services;
 using TopWords.Services.Interfaces;
+using TopWords.Settings;
 
 namespace TopWords
 {
@@ -24,6 +27,24 @@ namespace TopWords
 
         public void ConfigureServices(IServiceCollection services)
         {
+            // needed to load configuration from appsettings.json
+            services.AddOptions();
+
+            // needed to store rate limit counters and ip rules
+            services.AddMemoryCache();
+
+            //load general configuration from appsettings.json
+            services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+
+            //load ip rules from appsettings.json
+            services.Configure<IpRateLimitPolicies>(Configuration.GetSection("IpRateLimitPolicies"));
+
+            // inject counter and rules stores
+            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+
+            services.Configure<ApiSettings>(Configuration.GetSection("Api"));
+
             services.AddMvc()
                 .AddControllersAsServices()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -54,6 +75,8 @@ namespace TopWords
             services.AddScoped<ICrawlerService, CrawlerService>();
             services.AddScoped<IWordFrequencyService, WordFrequencyService>();
             services.AddScoped<TopWordsHub, TopWordsHub>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -81,6 +104,8 @@ namespace TopWords
             {
                 routes.MapHub<TopWordsHub>("/topWordsHub");
             });
+
+            app.UseIpRateLimiting();
 
             app.UseMvc(routes =>
             {

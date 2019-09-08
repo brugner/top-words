@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 using TopWords.Hubs;
 using TopWords.Models;
 using TopWords.Services.Interfaces;
+using TopWords.Settings;
 
 namespace TopWords.Services
 {
@@ -20,14 +22,16 @@ namespace TopWords.Services
         private readonly IHostingEnvironment _environment;
         private readonly ILogger<LyricsService> _logger;
         private readonly IHubContext<TopWordsHub> _hub;
+        private readonly ApiSettings _apiSettings;
 
-        public LyricsService(ICrawlerService crawlerService, IWordFrequencyService wordFrequencyService, IHostingEnvironment environment, ILogger<LyricsService> logger, IHubContext<TopWordsHub> hub)
+        public LyricsService(ICrawlerService crawlerService, IWordFrequencyService wordFrequencyService, IHostingEnvironment environment, ILogger<LyricsService> logger, IHubContext<TopWordsHub> hub, IOptionsSnapshot<ApiSettings> apiSettings)
         {
             _crawlerService = crawlerService;
             _wordFrequencyService = wordFrequencyService;
             _environment = environment;
             _logger = logger;
             _hub = hub;
+            _apiSettings = apiSettings.Value;
         }
 
         public async Task<TopWordsResult> GetTopWordsFromArtistLyrics(long artistId)
@@ -41,26 +45,23 @@ namespace TopWords.Services
                 return GetTopWordsFromFile(artistId);
             }
 
-            // TODO: what happens in case of ajax error? crawl and show artist name. show message 'politely crawling url..'
-            // TODO: change or add another lyrics site?
+            var songsPageInfo = await _crawlerService.GetSongsPageInfo(artistId);
 
-            var songsUrls = await _crawlerService.GetSongsUrls(artistId);
-
-            if (songsUrls.Count == 0)
+            if (songsPageInfo.SongsUrls.Count == 0)
             {
                 _logger.LogInformation("No songs found");
                 return new TopWordsResult(message: "No songs were found..");
             }
 
-            _logger.LogInformation($"{songsUrls.Count} songs urls found");
-            await NotifyClient($"{songsUrls.Count} songs urls found");
+            _logger.LogInformation($"{songsPageInfo.SongsUrls.Count} songs urls found");
+            await NotifyClient($"{songsPageInfo.SongsUrls.Count} songs urls found");
 
-            for (int i = 0; i < songsUrls.Take(5).Count(); i++) // TODO: remove the 10
+            for (int i = 0; i < songsPageInfo.SongsUrls.Take(_apiSettings.CrawlSongsCount).Count(); i++)
             {
                 _logger.LogInformation($"Crawling song #{i + 1}..");
                 await NotifyClient($"Crawling song #{i + 1}..");
 
-                string songLyrics = await _crawlerService.GetSongLyrics(songsUrls[i]);
+                string songLyrics = await _crawlerService.GetSongLyrics(songsPageInfo.SongsUrls[i]);
                 _artistLyrics.Add(songLyrics);
             }
 
@@ -68,9 +69,9 @@ namespace TopWords.Services
             await NotifyClient("Analyzing..");
 
             var topWords = _wordFrequencyService.GetWordsFrequencies(_artistLyrics);
-            var result = new TopWordsResult(message: "OK", words: topWords);
+            var result = new TopWordsResult(artist: new Artist(artistId, songsPageInfo.ArtistName), message: "OK", words: topWords);
 
-            SaveTopWordsToFile(result, artistId);
+            await SaveTopWordsToFile(result);
 
             _logger.LogInformation("Done!");
 
@@ -97,10 +98,10 @@ namespace TopWords.Services
             return Path.Combine(_environment.ContentRootPath, "Data", artistId + ".json");
         }
 
-        private void SaveTopWordsToFile(TopWordsResult topWords, long artistId)
+        private async Task SaveTopWordsToFile(TopWordsResult topWordsResult)
         {
             _logger.LogInformation("Saving file..");
-            File.WriteAllText(GetArtistFileName(artistId), JsonConvert.SerializeObject(topWords));
+            await File.WriteAllTextAsync(GetArtistFileName(topWordsResult.Artist.Id), JsonConvert.SerializeObject(topWordsResult));
         }
     }
 }

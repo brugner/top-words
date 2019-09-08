@@ -8,11 +8,12 @@
 
 @section Scripts {
     <script>
-        $(function () {
+        // TODO: remove the horrible javascript
+        $(document).ready(function () {
             $('#submit').on('click', function (evt) {
                 evt.preventDefault();
                 $("#resultList").empty();
-                $("result").addClass("hidden");
+                $("#result").addClass("hidden");
                 $("#submit").attr("disabled", true);
                 $("#artistId").attr("disabled", true);
                 $("#submit").text("Searching..");
@@ -46,13 +47,25 @@
                         }, 1000);
                     },
                     failure: function (error) {
+                        $("#message").text("Something went wrong. Please, try again.");
                         $("#submit").attr("disabled", false);
                         $("#artistId").attr("disabled", false);
+                        $("#result").removeClass("hidden");
                         $("#submit").text("Search");
                         console.log("error", error);
                     }
                 });
             });
+
+            $('.popart').on("click", function () {
+                var id = $(this).attr("data-id")
+                $("#artistId").val(id);
+                $("html, body").animate({
+                    scrollTop: $("#artistId").offset().top
+                }, 1000);
+
+                $("#submit").click();
+            })
         });
     </script>
 }

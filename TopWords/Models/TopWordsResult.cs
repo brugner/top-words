@@ -13,6 +13,11 @@ namespace TopWords.Models
         public string Message { get; set; }
 
         /// <summary>
+        /// The artist used in the search.
+        /// </summary>
+        public Artist Artist { get; set; }
+
+        /// <summary>
         /// A dictionary with the top words and its frequency.
         /// </summary>
         public IDictionary<string, int> Words { get; set; }
@@ -27,8 +32,9 @@ namespace TopWords.Models
             Message = message;
         }
 
-        public TopWordsResult(string message, IDictionary<string, int> words)
+        public TopWordsResult(Artist artist, string message, IDictionary<string, int> words)
         {
+            Artist = artist;
             Message = message;
             Words = words;
         }

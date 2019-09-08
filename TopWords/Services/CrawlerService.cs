@@ -1,11 +1,11 @@
 ﻿using Abot2.Core;
 using Abot2.Poco;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using TopWords.Models;
 using TopWords.Services.Interfaces;
 
 namespace TopWords.Services
@@ -24,25 +24,26 @@ namespace TopWords.Services
             MaxCrawlDepth = 0
         };
 
-        public async Task<List<string>> GetSongsUrls(long artistId)
+        public async Task<SongsPageInfo> GetSongsPageInfo(long artistId)
         {
             var url = "https://songmeanings.com/artist/view/songs/" + artistId;
 
             if (!IsValidUrl(url))
             {
-                return new List<string>();
+                return SongsPageInfo.Invalid;
             }
 
             var crawledPage = await _pageRequester.MakeRequestAsync(new Uri(url));
             var htmlLinks = crawledPage.AngleSharpHtmlDocument.QuerySelectorAll("#songslist tr td:first-child a");
-            var urls = new List<string>();
+            var artistName = crawledPage.AngleSharpHtmlDocument.QuerySelector("div.heading a:first-of-type").TextContent;
+            var result = new SongsPageInfo(artistName);
 
             foreach (var link in htmlLinks)
             {
-                urls.Add($"https:{link.GetAttribute("href")}");
+                result.SongsUrls.Add($"https:{link.GetAttribute("href")}");
             }
 
-            return urls;
+            return result;
         }
 
         public async Task<string> GetSongLyrics(string songUrl)

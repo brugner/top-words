@@ -9,5 +9,21 @@
         /// Artist Id.
         /// </summary>
         public long Id { get; set; }
+
+        /// <summary>
+        /// The name of the artist.
+        /// </summary>
+        public string Name { get; set; }
+
+        public Artist()
+        {
+
+        }
+
+        public Artist(long id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
     }
 }
