@@ -7,6 +7,7 @@ using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.IO;
 using System.Reflection;
+using TopWords.Hubs;
 using TopWords.Services;
 using TopWords.Services.Interfaces;
 
@@ -14,17 +15,18 @@ namespace TopWords
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc()
+                .AddControllersAsServices()
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddSwaggerGen(gen =>
             {
@@ -46,12 +48,14 @@ namespace TopWords
                 gen.IncludeXmlComments(xmlPath);
             });
 
+            services.AddSignalR();
+
             services.AddScoped<ILyricsService, LyricsService>();
             services.AddScoped<ICrawlerService, CrawlerService>();
             services.AddScoped<IWordFrequencyService, WordFrequencyService>();
+            services.AddScoped<TopWordsHub, TopWordsHub>();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
@@ -70,7 +74,12 @@ namespace TopWords
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "R.A.M v1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "TW v1");
+            });
+
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<TopWordsHub>("/topWordsHub");
             });
 
             app.UseMvc(routes =>

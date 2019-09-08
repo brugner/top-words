@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using TopWords.APIResources;
+﻿using System.Threading.Tasks;
+using TopWords.Models;
 
 namespace TopWords.Services.Interfaces
 {
     public interface ILyricsService
     {
-        Task<List<WordResource>> GetTopWordsFromArtistLyrics(long artistId);
+        Task<TopWordsResult> GetTopWordsFromArtistLyrics(long artistId);
     }
 }

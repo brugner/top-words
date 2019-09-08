@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TopWords.Services.Interfaces;
 
@@ -56,8 +57,10 @@ namespace TopWords.Services
                 songLyrics += item.TextContent;
             }
 
-            // TODO: regex?
-            return songLyrics.Trim().Replace(",", "").Replace(".", "").Replace("(", "").Replace(")", "");
+            songLyrics = songLyrics.Trim().ToLower();
+            Regex rgx = new Regex("[^a-zA-Z0-9 ']");
+
+            return rgx.Replace(songLyrics, "");
         }
 
         private bool IsValidUrl(string url)

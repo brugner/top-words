@@ -1,30 +1,21 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using TopWords.APIResources;
 using TopWords.Services.Interfaces;
 
 namespace TopWords.Services
 {
     public class WordFrequencyService : IWordFrequencyService
     {
-        public List<WordResource> GetWordsFrequencies(List<string> enumerable)
+        public IDictionary<string, int> GetWordsFrequencies(IEnumerable<string> artistLyrics)
         {
-            var dictionary = enumerable
-                   .SelectMany(x => x.ToLower().Split())
-                   .Where(x => IsValidWord(x))
-                   .GroupBy(x => x)
-                   .ToDictionary(x => x.Key, x => x.Count())
-                   .OrderByDescending(x => x.Value)
-                   .Take(10);
-
-            var result = new List<WordResource>();
-
-            foreach (var item in dictionary)
-            {
-                result.Add(new WordResource { Word = item.Key, Frequency = item.Value });
-            }
-
-            return result;
+            return artistLyrics
+                 .SelectMany(x => x.Split())
+                 .Where(x => IsValidWord(x))
+                 .GroupBy(x => x)
+                 .ToDictionary(x => x.Key, x => x.Count())
+                 .OrderByDescending(x => x.Value)
+                 .Take(10)
+                 .ToDictionary(x => x.Key, x => x.Value);
         }
 
         private static bool IsValidWord(string word)

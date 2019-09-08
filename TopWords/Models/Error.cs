@@ -1,8 +1,6 @@
-using System;
-
 namespace TopWords.Models
 {
-    public class ErrorViewModel
+    public class Error
     {
         public string RequestId { get; set; }
 

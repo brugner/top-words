@@ -3,7 +3,9 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - TopWords</title>
+    <meta name="author" content="Nery Brugnoni" />
+    <meta name="description" content="Just a fun site to learn and put to use a couple of concetps like web crawling and web sockets. Purely educational, no harm intended." />
+    <title>@ViewData["Title"] - Top Words</title>
 
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
@@ -18,15 +20,18 @@
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <header class="bg-primary text-white">
+        <div class="container text-center">
+            <h1>Top Words</h1>
+            <p class="lead">A landing page template freshly redesigned for Bootstrap 4</p>
+        </div>
+    </header>
 
-    <footer class="border-top footer text-muted">
+    @RenderBody()
+
+    <footer class="bg-dark">
         <div class="container">
-            &copy; 2019 - Brugnner
+            <p class="m-0 text-center text-white">Brugnner &copy; 2019</p>
         </div>
     </footer>
 
@@ -48,6 +53,8 @@
                 integrity="sha384-xrRywqdh3PHs8keKZN+8zzc5TX0GRTLCcmivcbNJWm2rs5C8PRhcEn3czEjhAO9o">
         </script>
     </environment>
+
+    <script src="~/lib/signalr/dist/browser/signalr.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @RenderSection("Scripts", required: false)

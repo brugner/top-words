@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Threading.Tasks;
+using TopWords.Models;
 using TopWords.Services.Interfaces;
 
 namespace TopWords.Controllers
@@ -18,25 +20,22 @@ namespace TopWords.Controllers
         /// <summary>
         /// Returns the most used words of an artist in its songs.
         /// </summary>
-        /// <param name="artistId">Artist Id as appears in the last segment of the artist's page url.</param>
-        /// <response code="200">A list with the words and its frequency.</response>
+        /// <param name="artist">Artist subjected to the analysis. Fill the Id as appears in the last segment of the artist's page url.</param>
+        /// <response code="200">A dictionary with the words and its frequency.</response>
         /// <response code="400">Usually if artistId is not a int64 number.</response>
         /// <response code="404">If the artist is not found.</response>
         /// <response code="500">Something went wrong. My bad.</response>
         /// <returns></returns>
-        [HttpGet("topwords/{artistId}")]
-        public async Task<IActionResult> TopWordsAsync(long artistId)
+        [HttpPost("api/topwords")]
+        [Consumes("application/json")]
+        public async Task<TopWordsResult> TopWordsAsync([FromBody]Artist artist)
         {
-            var result = await _lyricsService.GetTopWordsFromArtistLyrics(artistId);
+            if (artist == null)
+            {
+                throw new ArgumentNullException(nameof(artist));
+            }
 
-            if (result != null)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return NotFound($"Nothing found for artist with Id {artistId}");
-            }
+            return await _lyricsService.GetTopWordsFromArtistLyrics(artist.Id);
         }
     }
 }

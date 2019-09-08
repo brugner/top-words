@@ -1,37 +1,58 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="jumbotron mt-2">
-    <div class="container">
-        <h1 class="display-3">Top Words</h1>
-        <p>This is a template for a simple marketing or informational website. It includes a large callout called a jumbotron and three supporting pieces of content. Use it as a starting point to create something more unique.</p>
-        <p><a class="btn btn-primary" href="#" role="button">Learn more &raquo;</a></p>
-    </div>
-</div>
+<partial name="_popularArtists" />
+<partial name="_search" />
+<partial name="_results" />
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-4 offset-md-4">
-            <form>
-                <div class="form-group">
-                    <input type="text" class="form-control" id="artistId" placeholder="Artist Id">
-                </div>
+@section Scripts {
+    <script>
+        $(function () {
+            $('#submit').on('click', function (evt) {
+                evt.preventDefault();
+                $("#resultList").empty();
+                $("result").addClass("hidden");
+                $("#submit").attr("disabled", true);
+                $("#artistId").attr("disabled", true);
+                $("#submit").text("Searching..");
 
-                <button type="submit" class="btn btn-primary btn-block">Search</button>
-            </form>
-        </div>
-    </div>
+                const artist = JSON.stringify({ id: $("#artistId").val() });
 
-    <div class="row">
-        <div class="col-md-4 offset-md-4">
-            asdasdasd
-        </div>
-    </div>
+                $.ajax({
+                    type: "POST",
+                    url: "mvc/topwords",
+                    data: artist,
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (data) {
 
-    <div class="row">
-        <div class="col-md-4 offset-md-4">
-            asdasdasd
-        </div>
-    </div>
-</div>
+                        if (!data.words) {
+                            alert(data.message);
+                            return;
+                        }
+
+                        $.each(data.words, function (word, count) {
+                            $("#resultList").append('<li>' + word + ': ' + count + '</li>');
+                        });
+
+                        $("#message").text("");
+                        $("#submit").attr("disabled", false);
+                        $("#artistId").attr("disabled", false);
+                        $("#result").removeClass("hidden");
+                        $("#submit").text("Search");
+                        $("html, body").animate({
+                            scrollTop: $("#resultTitle").offset().top
+                        }, 1000);
+                    },
+                    failure: function (error) {
+                        $("#submit").attr("disabled", false);
+                        $("#artistId").attr("disabled", false);
+                        $("#submit").text("Search");
+                        console.log("error", error);
+                    }
+                });
+            });
+        });
+    </script>
+}
