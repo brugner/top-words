@@ -4,6 +4,9 @@ namespace TopWords.Hubs
 {
     public class TopWordsHub : Hub
     {
-
+        public string GetConnectionId()
+        {
+            return Context.ConnectionId;
+        }
     }
 }

@@ -21,31 +21,34 @@ namespace TopWords.Services
         private readonly IWordFrequencyService _wordFrequencyService;
         private readonly IHostingEnvironment _environment;
         private readonly ILogger<LyricsService> _logger;
-        private readonly IHubContext<TopWordsHub> _hub;
         private readonly ApiSettings _apiSettings;
 
-        public LyricsService(ICrawlerService crawlerService, IWordFrequencyService wordFrequencyService, IHostingEnvironment environment, ILogger<LyricsService> logger, IHubContext<TopWordsHub> hub, IOptionsSnapshot<ApiSettings> apiSettings)
+        private readonly TopWordsHub _hub;
+        private readonly IHubContext<TopWordsHub> _hub2;
+
+        public LyricsService(ICrawlerService crawlerService, IWordFrequencyService wordFrequencyService, IHostingEnvironment environment, ILogger<LyricsService> logger, TopWordsHub hub, IHubContext<TopWordsHub> hub2, IOptionsSnapshot<ApiSettings> apiSettings)
         {
             _crawlerService = crawlerService;
             _wordFrequencyService = wordFrequencyService;
             _environment = environment;
             _logger = logger;
             _hub = hub;
+            _hub2 = hub2;
             _apiSettings = apiSettings.Value;
         }
 
-        public async Task<TopWordsResult> GetTopWordsFromArtistLyrics(long artistId)
+        public async Task<TopWordsResult> GetTopWordsFromArtistLyrics(TopWordsParams topWordsParams)
         {
-            _logger.LogInformation($"Looking for artist with Id {artistId}");
-            await NotifyClient("Starting..");
+            _logger.LogInformation($"Looking for artist with Id {topWordsParams.ArtistId}");
+            await NotifyClient(topWordsParams.ConnectionId, "Starting..");
 
-            if (TopWordsFileExists(artistId))
+            if (TopWordsFileExists(topWordsParams.ArtistId))
             {
                 _logger.LogInformation("File found, done!");
-                return GetTopWordsFromFile(artistId);
+                return GetTopWordsFromFile(topWordsParams.ArtistId);
             }
 
-            var songsPageInfo = await _crawlerService.GetSongsPageInfo(artistId);
+            var songsPageInfo = await _crawlerService.GetSongsPageInfo(topWordsParams.ArtistId);
 
             if (songsPageInfo.SongsUrls.Count == 0)
             {
@@ -54,22 +57,22 @@ namespace TopWords.Services
             }
 
             _logger.LogInformation($"{songsPageInfo.SongsUrls.Count} songs urls found");
-            await NotifyClient($"{songsPageInfo.SongsUrls.Count} songs urls found");
+            await NotifyClient(topWordsParams.ConnectionId, $"{songsPageInfo.SongsUrls.Count} songs urls found");
 
             for (int i = 0; i < songsPageInfo.SongsUrls.Take(_apiSettings.CrawlSongsCount).Count(); i++)
             {
                 _logger.LogInformation($"Crawling song #{i + 1}..");
-                await NotifyClient($"Crawling song #{i + 1}..");
+                await NotifyClient(topWordsParams.ConnectionId, $"Crawling song #{i + 1}..");
 
                 string songLyrics = await _crawlerService.GetSongLyrics(songsPageInfo.SongsUrls[i]);
                 _artistLyrics.Add(songLyrics);
             }
 
             _logger.LogInformation("Analyzing..");
-            await NotifyClient("Analyzing..");
+            await NotifyClient(topWordsParams.ConnectionId, "Analyzing..");
 
             var topWords = _wordFrequencyService.GetWordsFrequencies(_artistLyrics);
-            var result = new TopWordsResult(artist: new Artist(artistId, songsPageInfo.ArtistName), message: "OK", words: topWords);
+            var result = new TopWordsResult(artist: new Artist(topWordsParams.ArtistId, songsPageInfo.ArtistName), message: "OK", words: topWords);
 
             await SaveTopWordsToFile(result);
 
@@ -78,9 +81,9 @@ namespace TopWords.Services
             return result;
         }
 
-        private async Task NotifyClient(string message)
+        private async Task NotifyClient(string connectionId, string message)
         {
-            await _hub.Clients.All.SendAsync("ReceiveMessage", message);
+            await _hub2.Clients.Client(connectionId).SendAsync("ReceiveMessage", message);
         }
 
         private bool TopWordsFileExists(long artistId)

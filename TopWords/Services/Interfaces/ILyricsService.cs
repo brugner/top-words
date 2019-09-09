@@ -5,6 +5,6 @@ namespace TopWords.Services.Interfaces
 {
     public interface ILyricsService
     {
-        Task<TopWordsResult> GetTopWordsFromArtistLyrics(long artistId);
+        Task<TopWordsResult> GetTopWordsFromArtistLyrics(TopWordsParams topWordsParams);
     }
 }

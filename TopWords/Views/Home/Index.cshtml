@@ -18,7 +18,10 @@
                 $("#artistId").attr("disabled", true);
                 $("#submit").text("Searching..");
 
-                const artist = JSON.stringify({ id: $("#artistId").val() });
+                const artist = JSON.stringify({
+                    artistId: $("#artistId").val(),
+                    connectionId: $("#connectionId").val()
+                });
 
                 $.ajax({
                     type: "POST",
@@ -30,6 +33,9 @@
 
                         if (!data.words) {
                             alert(data.message);
+                            $("#submit").text("Search");
+                            $("#submit").attr("disabled", false);
+                            $("#artistId").attr("disabled", false);
                             return;
                         }
 
@@ -37,7 +43,7 @@
                             $("#resultList").append('<li>' + word + ': ' + count + '</li>');
                         });
 
-                        $("#message").text("");
+                        $("#submit").text("Search");
                         $("#submit").attr("disabled", false);
                         $("#artistId").attr("disabled", false);
                         $("#result").removeClass("hidden");
@@ -47,7 +53,7 @@
                         }, 1000);
                     },
                     failure: function (error) {
-                        $("#message").text("Something went wrong. Please, try again.");
+                        $("#submit").text("Something went wrong. Please, try again.");
                         $("#submit").attr("disabled", false);
                         $("#artistId").attr("disabled", false);
                         $("#result").removeClass("hidden");
