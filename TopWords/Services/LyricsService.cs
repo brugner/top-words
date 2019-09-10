@@ -88,10 +88,16 @@ namespace TopWords.Services
 
             foreach (var fileName in filesNames)
             {
-                var fileContent = await File.ReadAllTextAsync(fileName);
-                var topWordsResult = JsonConvert.DeserializeObject<TopWordsResult>(fileContent);
+                if (File.Exists(fileName))
+                {
+                    var fileContent = await File.ReadAllTextAsync(fileName);
+                    var topWordsResult = JsonConvert.DeserializeObject<TopWordsResult>(fileContent);
 
-                artists.Add(topWordsResult.Artist);
+                    if (topWordsResult?.Artist != null)
+                    {
+                        artists.Add(topWordsResult.Artist);
+                    }
+                }
             }
 
             return artists.OrderBy(x => x.Name).ToList();
