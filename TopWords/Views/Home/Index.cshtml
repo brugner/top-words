@@ -1,10 +1,12 @@
-﻿@{
+﻿@model List<Artist>
+@{
     ViewData["Title"] = "Home";
 }
 
-<partial name="_popularArtists" />
+<partial name="_availableArtists" model="Model" />
 <partial name="_search" />
 <partial name="_results" />
+<partial name="_about" />
 
 @section Scripts {
     <script>

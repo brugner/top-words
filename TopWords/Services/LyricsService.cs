@@ -22,19 +22,18 @@ namespace TopWords.Services
         private readonly IHostingEnvironment _environment;
         private readonly ILogger<LyricsService> _logger;
         private readonly ApiSettings _apiSettings;
-
-        private readonly TopWordsHub _hub;
         private readonly IHubContext<TopWordsHub> _hub2;
+        private readonly string _dataPath;
 
-        public LyricsService(ICrawlerService crawlerService, IWordFrequencyService wordFrequencyService, IHostingEnvironment environment, ILogger<LyricsService> logger, TopWordsHub hub, IHubContext<TopWordsHub> hub2, IOptionsSnapshot<ApiSettings> apiSettings)
+        public LyricsService(ICrawlerService crawlerService, IWordFrequencyService wordFrequencyService, IHostingEnvironment environment, ILogger<LyricsService> logger, IHubContext<TopWordsHub> hub2, IOptionsSnapshot<ApiSettings> apiSettings)
         {
             _crawlerService = crawlerService;
             _wordFrequencyService = wordFrequencyService;
             _environment = environment;
             _logger = logger;
-            _hub = hub;
             _hub2 = hub2;
             _apiSettings = apiSettings.Value;
+            _dataPath = Path.Combine(_environment.ContentRootPath, "Data");
         }
 
         public async Task<TopWordsResult> GetTopWordsFromArtistLyrics(TopWordsParams topWordsParams)
@@ -81,6 +80,23 @@ namespace TopWords.Services
             return result;
         }
 
+
+        public async Task<List<Artist>> GetAvailableArtistsAsync()
+        {
+            var artists = new List<Artist>();
+            var filesNames = Directory.GetFiles(_dataPath, "*.json");
+
+            foreach (var fileName in filesNames)
+            {
+                var fileContent = await File.ReadAllTextAsync(fileName);
+                var topWordsResult = JsonConvert.DeserializeObject<TopWordsResult>(fileContent);
+
+                artists.Add(topWordsResult.Artist);
+            }
+
+            return artists.OrderBy(x => x.Name).ToList();
+        }
+
         private async Task NotifyClient(string connectionId, string message)
         {
             await _hub2.Clients.Client(connectionId).SendAsync("ReceiveMessage", message);
@@ -98,7 +114,7 @@ namespace TopWords.Services
 
         private string GetArtistFileName(long artistId)
         {
-            return Path.Combine(_environment.ContentRootPath, "Data", artistId + ".json");
+            return Path.Combine(_dataPath, $"{artistId}.json");
         }
 
         private async Task SaveTopWordsToFile(TopWordsResult topWordsResult)

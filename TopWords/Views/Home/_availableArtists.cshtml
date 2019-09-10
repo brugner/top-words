@@ -1,0 +1,35 @@
+﻿@model List<Artist>
+
+<section>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h2>Available artists</h2>
+                <p>This is a great place to start. Just pick an artist from this list to get its top words instantly!</p>
+
+                <div class="container">
+                    <div class="row">
+                        <div class="col-sm">
+                            <ul>
+                                @foreach (var artist in Model.Take((Model.Count / 2) + 1))
+                                {
+                                    <li><a href="#" class="popart" data-id="@artist.Id">@artist.Name</a></li>
+                                }
+                            </ul>
+                        </div>
+                        <div class="col-sm">
+                            <ul>
+                                @foreach (var artist in Model.Skip((Model.Count / 2) + 1))
+                                {
+                                    <li><a href="#" class="popart" data-id="@artist.Id">@artist.Name</a></li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+

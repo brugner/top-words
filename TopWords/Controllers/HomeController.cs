@@ -1,22 +1,26 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using TopWords.Models;
+using TopWords.Services.Interfaces;
 
 namespace TopWords.Controllers
 {
     public class HomeController : Controller
     {
         private readonly TopWordsController _topWordsController;
+        private readonly ILyricsService _lyricsService;
 
-        public HomeController(TopWordsController topWordsController)
+        public HomeController(TopWordsController topWordsController, ILyricsService lyricsService)
         {
             _topWordsController = topWordsController;
+            _lyricsService = lyricsService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            // TODO: fill the available artist section
-            return View();
+            var artists = await _lyricsService.GetAvailableArtistsAsync();
+
+            return View(artists);
         }
 
         [HttpPost("mvc/topwords")]
