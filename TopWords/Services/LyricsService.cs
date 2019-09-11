@@ -60,8 +60,8 @@ namespace TopWords.Services
 
             for (int i = 0; i < songsPageInfo.SongsUrls.Take(_apiSettings.CrawlSongsCount).Count(); i++)
             {
-                _logger.LogInformation($"Crawling song #{i + 1}..");
-                await NotifyClient(topWordsParams.ConnectionId, $"Crawling song #{i + 1}..");
+                _logger.LogInformation($"Crawling song #{i + 1} from {songsPageInfo.ArtistName}..");
+                await NotifyClient(topWordsParams.ConnectionId, $"Crawling song #{i + 1} from {songsPageInfo.ArtistName}..");
 
                 string songLyrics = await _crawlerService.GetSongLyrics(songsPageInfo.SongsUrls[i]);
                 _artistLyrics.Add(songLyrics);

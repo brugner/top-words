@@ -10,7 +10,8 @@
 
 @section Scripts {
     <script>
-        // TODO: remove the horrible javascript
+        // TODO: remove/refactor this horrible javascript
+
         $(document).ready(function () {
             $('#submit').on('click', function (evt) {
                 evt.preventDefault();
@@ -50,6 +51,7 @@
                         $("#artistId").attr("disabled", false);
                         $("#result").removeClass("hidden");
                         $("#submit").text("Search");
+                        $("#resultTitle").text("Results for " + data.artist.name);
                         $("html, body").animate({
                             scrollTop: $("#resultTitle").offset().top
                         }, 1000);
@@ -60,6 +62,7 @@
                         $("#artistId").attr("disabled", false);
                         $("#result").removeClass("hidden");
                         $("#submit").text("Search");
+                        $("#resultTitle").text("Results");
                         console.log("error", error);
                     }
                 });
@@ -67,12 +70,15 @@
 
             $('.popart').on("click", function () {
                 var id = $(this).attr("data-id")
-                $("#artistId").val(id);
-                $("html, body").animate({
-                    scrollTop: $("#artistId").offset().top
-                }, 1000);
 
-                $("#submit").click();
+                if (!$("#submit").is(":disabled")) {
+                    $("#artistId").val(id);
+                    $("html, body").animate({
+                        scrollTop: $("#artistId").offset().top
+                    }, 1000);
+
+                    $("#submit").click();
+                }
             })
         });
     </script>
